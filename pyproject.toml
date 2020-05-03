@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "norn"
+version = "0.1.0"
+description = ""
+authors = ["Donovan Carthew <donovan.carthew@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+markdown = "^3.2.1"
+bs4 = "^0.0.1"
+requests = "^2.23.0"
+argparse = "^1.4.0"
+
+[tool.poetry.scripts]
+norn = 'norn.cmd:main'
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
