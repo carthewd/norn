@@ -1,9 +1,10 @@
-import sys
 import json
+import sys
+
 import boto3
 
 
-class CWEventTest():
+class CWEventTest:
     def __init__(self):
         self.pattern = None
 
@@ -14,12 +15,12 @@ class CWEventTest():
         elif s_pattern:
             self.pattern = s_pattern
         else:
-            buf = ''
-            print('Enter event pattern --> ')
+            buf = ""
+            print("Enter event pattern --> ")
             while True:
-                pattern = sys.stdin.readline().rstrip('\n')
+                pattern = sys.stdin.readline().rstrip("\n")
 
-                if pattern == '.':
+                if pattern == ".":
                     break
                 else:
                     buf += pattern
@@ -27,23 +28,24 @@ class CWEventTest():
             self.pattern = json.loads(buf)
 
     def test_pattern(self, test_event):
-        aws_client = boto3.client('events')
+        aws_client = boto3.client("events")
 
         response = aws_client.test_event_pattern(
-            EventPattern=json.dumps(self.pattern),
-            Event=json.dumps(test_event)
+            EventPattern=json.dumps(self.pattern), Event=json.dumps(test_event)
         )
 
-        return response['Result']
+        return response["Result"]
 
     @staticmethod
-    def trigger_lambda(function_name, test_event, invoke_type='RequestResponse', alias=None):
-        aws_client = boto3.client('lambda')
+    def trigger_lambda(
+        function_name, test_event, invoke_type="RequestResponse", alias=None
+    ):
+        aws_client = boto3.client("lambda")
 
         response = aws_client.invoke(
             FunctionName=function_name,
             InvocationType=invoke_type,
-            LogType='Tail',
+            LogType="Tail",
             Payload=json.dumps(test_event).encode()
             # Qualifier=alias
         )

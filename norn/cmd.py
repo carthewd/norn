@@ -1,12 +1,11 @@
 import argparse
-import sys
-from pprint import pprint
 import json
 import os
+import sys
+from pprint import pprint
 from urllib.parse import urlparse
 
-from norn import events
-from norn import test
+from norn import events, test
 
 
 def main():
@@ -55,7 +54,9 @@ def main():
     events_parser.set_defaults(func=get_events)
 
     # test
-    test_parser = subparsers.add_parser("test", description="Test with CloudWatch events")
+    test_parser = subparsers.add_parser(
+        "test", description="Test with CloudWatch events"
+    )
     test_parser.add_argument(
         "--event",
         "-e",
@@ -78,7 +79,9 @@ def main():
     test_parser.set_defaults(func=test_pattern)
 
     # trigger
-    trigger_parser = subparsers.add_parser("trigger", description="Trigger lambda functions with test events")
+    trigger_parser = subparsers.add_parser(
+        "trigger", description="Trigger lambda functions with test events"
+    )
     trigger_parser.add_argument(
         "--event",
         "-e",
@@ -118,15 +121,16 @@ def get_events(**kwargs):
     cwe = events.CloudWatchEvents(account=account, region=event_region)
 
     try:
-        idx = int(service_name.split('.')[1]) - 1
+        idx = int(service_name.split(".")[1]) - 1
     except IndexError:
         idx = None
 
-    ret_func = getattr(cwe, service_name.split('.')[0])
+    ret_func = getattr(cwe, service_name.split(".")[0])
     if idx or idx == 0:
         pprint(ret_func[idx])
     else:
         pprint(ret_func)
+
 
 def test_pattern(**kwargs):
     tester = test.CWEventTest()
@@ -152,15 +156,16 @@ def test_pattern(**kwargs):
         tester.load_pattern(file=final_path)
 
     try:
-        idx = int(sample_event.split('.')[1]) - 1
+        idx = int(sample_event.split(".")[1]) - 1
     except IndexError:
         idx = 0
 
-    ret_func = getattr(test_events, sample_event.split('.')[0])
+    ret_func = getattr(test_events, sample_event.split(".")[0])
 
     pattern_result = tester.test_pattern(ret_func[idx])
 
     print(pattern_result)
+
 
 def trigger_f(**kwargs):
     test_events = events.CloudWatchEvents()
@@ -169,11 +174,11 @@ def trigger_f(**kwargs):
     function_name = kwargs.get("function_name")
 
     try:
-        idx = int(sample_event.split('.')[1]) - 1
+        idx = int(sample_event.split(".")[1]) - 1
     except IndexError:
         idx = 0
 
-    ret_func = getattr(test_events, sample_event.split('.')[0])
+    ret_func = getattr(test_events, sample_event.split(".")[0])
 
     resp = test.CWEventTest.trigger_lambda(function_name, ret_func[idx])
 

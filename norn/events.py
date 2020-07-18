@@ -1,13 +1,14 @@
-import requests
-import markdown
-from bs4 import BeautifulSoup
 import json
-import re
-import uuid
-import pickle
 import os
+import pickle
+import re
 import tempfile
 import time
+import uuid
+
+import markdown
+import requests
+from bs4 import BeautifulSoup
 
 
 class EventList(list):
@@ -15,7 +16,7 @@ class EventList(list):
         list.__init__(self, *args)
 
         for i in range(len(self)):
-            setattr(self, f'_{i + 1}', self[i])
+            setattr(self, f"_{i + 1}", self[i])
 
 
 class CloudWatchEvents:
@@ -38,9 +39,9 @@ class CloudWatchEvents:
             event_file = open(event_fpath, "wb")
 
         if (
-                file_state
-                and (int(round(time.time() * 1000)) - int(file_state.st_mtime * 1000))
-                > 604800000
+            file_state
+            and (int(round(time.time() * 1000)) - int(file_state.st_mtime * 1000))
+            > 604800000
         ):
             fetch_events = True
             event_file = open(event_fpath, "wb")
@@ -101,19 +102,19 @@ class CloudWatchEvents:
 
                 for code_block in soup.findAll("code"):
                     try:
-                        parsed_data = code_block.text.replace("”", "\"")
+                        parsed_data = code_block.text.replace("”", '"')
                         for p in patterns:
                             parsed_data = p[0].sub(p[1], parsed_data)
 
                         event_data = json.loads(parsed_data)
                         try:
                             if (
-                                    "source" in event_data.keys()
-                                    and type(event_data["source"]) is not list
+                                "source" in event_data.keys()
+                                and type(event_data["source"]) is not list
                             ):
                                 if (
-                                        event_data["source"]
-                                        not in cloudwatch_events["events"].keys()
+                                    event_data["source"]
+                                    not in cloudwatch_events["events"].keys()
                                 ):
                                     cloudwatch_events["events"][
                                         event_data["source"]
@@ -137,19 +138,21 @@ class CloudWatchEvents:
         events = self.events
         ebs_events = EventList()
 
-        self.services.append('ebs')
+        self.services.append("ebs")
         for svc in events["events"].keys():
             svc_name = svc.replace("aws.", "")
             self.services.append(svc_name)
 
-            for evn in events['events'][svc]:
-                if 'EBS' in evn['detail-type']:
+            for evn in events["events"][svc]:
+                if "EBS" in evn["detail-type"]:
                     ebs_events.append(evn)
 
             event_conv = EventList(events["events"][svc])
             setattr(self, "ebs", ebs_events)
             setattr(self, svc_name, event_conv)
 
-        self.ec2[:] = [ebs_event for ebs_event in self.ec2 if 'EBS' not in ebs_event['detail-type']]
+        self.ec2[:] = [
+            ebs_event for ebs_event in self.ec2 if "EBS" not in ebs_event["detail-type"]
+        ]
 
         self.services.sort()
