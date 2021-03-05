@@ -9,6 +9,7 @@ import uuid
 import markdown
 import requests
 from bs4 import BeautifulSoup
+from norn import util
 
 
 class EventList(list):
@@ -23,6 +24,7 @@ class CloudWatchEvents:
     def __init__(self, **kwargs):
         self.account = kwargs.get("account")
         self.event_region = kwargs.get("region")
+        self.debug = kwargs.get("debug")
 
         self.events = self.get_events()
         self.services = []
@@ -125,9 +127,8 @@ class CloudWatchEvents:
                         except AttributeError:
                             continue
                     except ValueError as e:
-                        # print(e)
-                        # print(parsed_data)
-                        # print('-'*80)
+                        if "(char 0)" not in str(e) and self.debug:
+                            util.parse_debug(parsed_data, url, str(e))
                         continue
             pickle.dump(cloudwatch_events, event_file)
             event_file.close()

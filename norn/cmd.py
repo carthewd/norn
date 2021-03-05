@@ -21,6 +21,15 @@ def main():
     )
     service_parser.set_defaults(func=services)
 
+    service_parser.add_argument(
+        "--debug",
+        "-d",
+        dest="debug",
+        action="store_true",
+        default=False,
+        help="Add debug output"
+    )
+
     # events
     events_parser = subparsers.add_parser("events", description="Events for a service")
     events_parser.add_argument(
@@ -104,11 +113,14 @@ def main():
     trigger_parser.set_defaults(func=trigger_f)
 
     args = parser.parse_args(argv)
-    args.func(**vars(args))
+    try:
+        args.func(**vars(args))
+    except AttributeError:
+        parser.print_help()
 
 
 def services(**kwargs):
-    svc = events.CloudWatchEvents()
+    svc = events.CloudWatchEvents(**kwargs)
 
     for i, service in enumerate(svc.services, 1):
         print(f"\t{i:>3}   {service}")
