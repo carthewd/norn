@@ -10,6 +10,7 @@ import markdown
 import requests
 from bs4 import BeautifulSoup
 from norn import util
+from norn import flags
 
 
 class EventList(list):
@@ -24,7 +25,7 @@ class CloudWatchEvents:
     def __init__(self, **kwargs):
         self.account = kwargs.get("account")
         self.event_region = kwargs.get("region")
-        self.debug = kwargs.get("debug")
+        flags.debug = kwargs.get("debug")
 
         self.events = self.get_events()
         self.services = []
@@ -57,6 +58,10 @@ class CloudWatchEvents:
             cloudwatch_events = pickle.load(event_file)
             event_file.close()
             fetch_events = False
+
+        if flags.debug: 
+            fetch_events = True
+            event_file = open(event_fpath, "wb")
 
         if fetch_events:
             cloudwatch_events = {"events": {}}
@@ -103,33 +108,33 @@ class CloudWatchEvents:
                 soup = BeautifulSoup(html_data, features="html.parser")
 
                 for code_block in soup.findAll("code"):
-                    try:
-                        parsed_data = code_block.text.replace("”", '"')
-                        for p in patterns:
-                            parsed_data = p[0].sub(p[1], parsed_data)
+                    parsed_data = code_block.text.replace("”", '"')
+                    parsed_data = code_block.text.replace("...", "")
+                    for p in patterns:
+                        parsed_data = p[0].sub(p[1], parsed_data)
 
+                    try:
                         event_data = json.loads(parsed_data)
-                        try:
+                    except ValueError as e:
+                        event_data = util.fix_json(e, parsed_data, url)
+                    try:
+                        if (
+                            "source" in event_data.keys()
+                            and type(event_data["source"]) is not list
+                        ):
                             if (
-                                "source" in event_data.keys()
-                                and type(event_data["source"]) is not list
+                                event_data["source"]
+                                not in cloudwatch_events["events"].keys()
                             ):
-                                if (
-                                    event_data["source"]
-                                    not in cloudwatch_events["events"].keys()
-                                ):
-                                    cloudwatch_events["events"][
-                                        event_data["source"]
-                                    ] = []
                                 cloudwatch_events["events"][
                                     event_data["source"]
-                                ].append(event_data)
-                        except AttributeError:
-                            continue
-                    except ValueError as e:
-                        if "(char 0)" not in str(e) and self.debug:
-                            util.parse_debug(parsed_data, url, str(e))
+                                ] = []
+                            cloudwatch_events["events"][
+                                event_data["source"]
+                            ].append(event_data)
+                    except AttributeError as e:
                         continue
+
             pickle.dump(cloudwatch_events, event_file)
             event_file.close()
 
